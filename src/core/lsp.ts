@@ -27,7 +27,7 @@ export async function getFunctionContentFromLineAndCharacter(
   let isLongComment = false;
   for (let row of fileContentStart) {
     fileResultArray.push(row);
-    if (row.replace(/\s\t/g, "").startsWith("//")) {
+    if (row.replace(/\s/g, "").startsWith("//")) {
       continue;
     }
     let commentStartIndex: number = -1;
@@ -84,24 +84,22 @@ export async function getFileLineAndCharacterFromFunctionName(
     console.error(e);
     return [-1, -1];
   }
-  const memberAccessFunction = functionName.split("->");
+  const memberAccessFunction = functionName.split(".");
   const memberAccessFunctionName =
     memberAccessFunction[memberAccessFunction.length - 1];
   const wholeFunctionName = !memberAccessFunctionName.includes("(") && memberAccessFunction.length === 1
     ? memberAccessFunctionName + "("
-    : memberAccessFunction.length > 1
-    ? memberAccessFunctionName + ")"
     : memberAccessFunctionName;
   const simplfiedFunctionName = isFirst || memberAccessFunction.length > 1
-    ? [wholeFunctionName.split(",")[0].replace(/^[\s\t]*/g, "")]
-    : [" " + wholeFunctionName.split(",")[0].replace(/^[\s\t]*/g, ""),
-      "\t" + wholeFunctionName.split(",")[0].replace(/^[\s\t]*/g, "")];
+    ? [wholeFunctionName.split(",")[0].replace(/^[\s]*/g, "")]
+    : [" " + wholeFunctionName.split(",")[0].replace(/^[\s]*/g, ""),
+      "\t" + wholeFunctionName.split(",")[0].replace(/^[\s]*/g, "")];
   const fileContentArray = fileContent.split("\n");
   let isLongComment = false;
   for (let i in fileContentArray) {
     const index = isNaN(Number(i)) ? -1 : Number(i);
     const row = fileContentArray[index];
-    if (row.replace(/\s\t/g, "").startsWith("//")) {
+    if (row.replace(/\s/g, "").startsWith("//")) {
       continue;
     }
     let commentStartIndex: number = -1;

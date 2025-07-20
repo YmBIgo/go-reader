@@ -1,5 +1,5 @@
-## Linux Reader とは？
-Linux Reader とは、LLMと一緒にLinuxのコードを読むためのツールです。
+## Go Reader とは？
+Go Reader とは、LLMと一緒にGoのコードを読むためのツールです。
 
 #### [できること]
 - 人がコードを読まずともLLMが関数探索してくれる
@@ -9,9 +9,9 @@ Linux Reader とは、LLMと一緒にLinuxのコードを読むためのツー�
 - 調べた関数経路をLLMがレポートにしてくれる
 
 #### [効果]
-- Linuxコードをランダムウォークなしに読み進められる
+- Goコードをランダムウォークなしに読み進められる
 - 土地勘がないと10分以上かかる数百行、数千行の関数のコードリーディングを、LLMが1分で終わらせてくれる
-- Linuxコードのバグを見つけられる機能がある
+- Goコードのバグを見つけられる機能がある
 - 頭にいれるだけで暗黙知になりがちな関数経路や関数の説明をLLMがしてくれる
 
 #### [できないこと/人の作業]
@@ -21,37 +21,25 @@ Linux Reader とは、LLMと一緒にLinuxのコードを読むためのツー�
 
 ## 利用方法
 
-1. Linuxコードベース、clangdの準備
+1. goplsの準備
 
 ```
-git clone https://github.com/torvalds/linux
-brew install clangd
+brew install gopls
 ```
 
-2. compile_commands.json の用意
+2. vscode のインストール
 
-https://zenn.dev/tmsn/articles/6317bdf591bc97
-
-なども参考にする
+3. GoReader のインストール
 
 ```
-make defconfig 
-bear -- make LLVM=1 -j16 
+git clone https://github.com/YmBIgo/GoReader
 ```
 
-3. vscode のインストール
+4. 設定の入力
+goplsのパス、LLM（OpenAI・Claude・Plamo）を入力
 
-4. LinuxReader のインストール
-
-```
-git clone https://github.com/YmBIgo/LinuxReader
-```
-
-5. 設定の入力
-clangdのパス、Linuxのパス、compile_commands.json のディレクトリのパス、LLM（OpenAI・Claude・Plamo）を入力
-
-6. チャット画面で探索を開始
+5. チャット画面で探索を開始
 最初に、「探索を開始するファイルパス」「探索を開始する関数」「探索の目的」を入力すれば、探索を開始できます。
 
-7. 探索を制御
+6. 探索を制御
 探索に成功すると、

@@ -23,9 +23,9 @@ import {
 } from "./prompt/index_ja";
 import pWaitFor from "p-wait-for";
 
-let client: ClangdLanguageClient | null;
+let client: GoLanguageClient | null;
 
-class ClangdLanguageClient extends vscodelc.LanguageClient {
+class GoLanguageClient extends vscodelc.LanguageClient {
   // Override the default implementation for failed requests. The default
   // behavior is just to log failures in the output panel, however output panel
   // is designed for extension debugging purpose, normal users will not open it,
@@ -50,9 +50,9 @@ class ClangdLanguageClient extends vscodelc.LanguageClient {
   }
 }
 
-export const clangdDocumentSelector = [{ scheme: "file", language: "c" }];
+export const goplsDocumentSelector = [{ scheme: "file", language: "go" }];
 
-export class LinuxReader {
+export class GoReader {
   private apiHandler: LLMModel | null;
   private historyHanlder: HistoryHandler | null = null;
   private rootPath: string = "";
@@ -88,10 +88,9 @@ export class LinuxReader {
     // gemini
     geminiModel: string,
     geminiApiKey: string,
-    // clangd
-    clangdPath: string,
-    linuxPath: string,
-    compileCommandPath: string,
+    // gopls
+    goplsPath: string,
+    goProjectPath: string,
     reportPath: string
   ) {
     this.saySocket = (content: string) => {
@@ -134,30 +133,30 @@ export class LinuxReader {
         : "unknown llm name";
     this.apiHandler = buildLLMHanlder(llmName, modelType, apiKey);
     this.saveReportFolder = reportPath;
-    if (!clangdPath || !linuxPath || !compileCommandPath) {
+    if (!goplsPath || !goProjectPath) {
       return;
     }
-    this.init(clangdPath, linuxPath, compileCommandPath);
+    this.init(goplsPath, goProjectPath);
   }
 
   private async init(
-    clangdPath: string,
-    linuxPath: string,
-    compileCommand: string
+    goplsPath: string,
+    goProjectPath: string,
   ) {
-    const clangd: vscodelc.Executable = {
-      command: clangdPath,
-      args: [`--compile-commands-dir=${compileCommand}`, "--background-index"],
+    const gopls: vscodelc.Executable = {
+      command: goplsPath,
       options: {
-        cwd: linuxPath,
+        cwd: goProjectPath,
         shell: true,
       },
     };
-    const serverOptions: vscodelc.ServerOptions = clangd;
+    const serverOptions: vscodelc.ServerOptions = gopls;
     const clientOptions: vscodelc.LanguageClientOptions = {
-      documentSelector: clangdDocumentSelector,
+      documentSelector: goplsDocumentSelector,
       initializationOptions: {
-        clangdFileStatus: true,
+        enabledFeatures: {
+          fileStatus: true
+        },
       },
       revealOutputChannelOn: vscodelc.RevealOutputChannelOn.Never,
     };
@@ -171,8 +170,8 @@ export class LinuxReader {
           console.error("client failed to start...");
         });
     } else {
-      client = new ClangdLanguageClient(
-        `Linux Reader`,
+      client = new GoLanguageClient(
+        `Go Reader`,
         serverOptions,
         clientOptions
       );
@@ -225,7 +224,7 @@ export class LinuxReader {
     const result = await this.askSocket(question);
     const resultNumber = parseInt(result.ask);
     if (isNaN(resultNumber) || resultNumber > 999999) {
-      this.runHistoryPoint(result.ask);
+      await this.runHistoryPoint(result.ask);
       return;
     }
     this.sendErrorSocket("ハッシュ値が見つかりませんでした。再度閉じて再試行してください");
@@ -327,6 +326,7 @@ ${functionContent}
       let isLongComment2 = false;
       const fileCodeLine =
         fileContentArray.find((fcr) => {
+          if (!fcr) return false
           if (fcr.includes(each_r.code_line)) {
             return true;
           }
@@ -498,7 +498,7 @@ ${functionContent}
       }
     }
     if (isNaN(resultNumber) || resultNumber > 999999) {
-      this.runHistoryPoint(result.ask);
+      await this.runHistoryPoint(result.ask);
       return;
     }
     if (resultNumber === 5) {
@@ -513,7 +513,7 @@ ${functionContent}
     }
     this.historyHanlder?.addHistory(newHistoryChoices);
     this.saySocket(
-      `Clangdは "${responseJSON[resultNumber].name}" を検索しています`
+      `Goplsは "${responseJSON[resultNumber].name}" を検索しています`
     );
     const [searchLine, searchCharacter] =
       await getFileLineAndCharacterFromFunctionName(
@@ -528,10 +528,10 @@ ${functionContent}
       return;
     }
     const [newFile, newLine, newCharacter, newFunctionContent] =
-      await this.queryClangd(currentFilePath, searchLine, searchCharacter);
+      await this.queryGopls(currentFilePath, searchLine, searchCharacter);
     if (!newFile) {
-      console.error("Clangd はファイルの検索に失敗しました");
-      this.sendErrorSocket("Clangd はファイルの検索に失敗しました");
+      console.error("Gopls はファイルの検索に失敗しました");
+      this.sendErrorSocket("Gopls はファイルの検索に失敗しました");
       this.saveChoiceTree();
       return;
     }
@@ -542,7 +542,7 @@ ${functionContent}
     this.runTask(removeFilePrefixFromFilePath(newFile), newFunctionContent);
   }
 
-  private runHistoryPoint(historyHash: string) {
+  private async runHistoryPoint(historyHash: string) {
     const newRunConfig = this.historyHanlder?.moveById(historyHash);
     if (!newRunConfig) {
       this.sendErrorSocket(
@@ -551,8 +551,27 @@ ${functionContent}
       this.saveChoiceTree();
       return;
     }
-    const { functionCodeLine, originalFilePath } = newRunConfig;
-    this.runTask(originalFilePath, functionCodeLine);
+    const { functionCodeContent, functionCodeLine, functionName, originalFilePath } = newRunConfig;
+    let functionResult = functionCodeContent;
+    if (!functionCodeContent) {
+      const [line, character] = await getFileLineAndCharacterFromFunctionName(originalFilePath, functionCodeLine, functionName);
+      if (line === -1 && character === -1) {
+        this.sendErrorSocket(
+          `指定された検索履歴の関数が見つかりませんでした ${historyHash}`
+        );
+        this.saveChoiceTree();
+        return;
+      }
+      const [newFile, , , newFileContent] = await this.queryGopls(originalFilePath, line, character);
+      if (!newFile) {
+        console.error("Gopls はファイルの検索に失敗しました");
+        this.sendErrorSocket("Gopls はファイルの検索に失敗しました");
+        this.saveChoiceTree();
+        return;
+      }
+      functionResult = newFileContent;
+    }
+    this.runTask(originalFilePath, functionResult ?? functionCodeLine);
   }
 
   private async getReport() {
@@ -645,7 +664,7 @@ ${description ? description : "not provided..."}
     );
   }
 
-  private async doQueryClangd(
+  private async doQueryGopls(
     filePath: string,
     line: number,
     character: number,
@@ -654,13 +673,13 @@ ${description ? description : "not provided..."}
     console.log(line, character);
     let itemString: string = "";
     const fileContent = await fs.readFile(filePath, "utf-8");
-    await pWaitFor(() => !!this.isClangdRunning(), {
+    await pWaitFor(() => !!this.isGoplsRunning(), {
       interval: 500,
     });
     await client?.sendNotification("textDocument/didOpen", {
       textDocument: {
         uri: addFilePrefixToFilePath(filePath),
-        languageId: "c",
+        languageId: "go",
         version: 0,
         text: fileContent,
       },
@@ -694,7 +713,7 @@ ${description ? description : "not provided..."}
     await client?.sendNotification("textDocument/didClose", {
       textDocument: {
         uri: addFilePrefixToFilePath(filePath),
-        languageId: "c",
+        languageId: "go",
         version: 0,
         text: fileContent,
       },
@@ -707,30 +726,18 @@ ${description ? description : "not provided..."}
     ];
   }
 
-  async queryClangd(
+  async queryGopls(
     filePath: string,
     line: number,
     character: number
   ): Promise<[string, number, number, string, any]> {
     const [newFilePath1, newLine1, newCharacter1, item1] =
-      await this.doQueryClangd(filePath, line, character, 5000);
+      await this.doQueryGopls(filePath, line, character, 5000);
     let newFilePath2 = newFilePath1;
     let newLine2 = newLine1;
     let newCharacter2 = newCharacter1;
     let item2 = item1;
 
-    for (let i = 0; i < 10; i++) {
-      if (newFilePath2.endsWith(".h")) {
-        [newFilePath2, newLine2, newCharacter2, item2] =
-          await this.doQueryClangd(
-            removeFilePrefixFromFilePath(newFilePath1),
-            newLine1,
-            newCharacter1
-          );
-      } else if (newFilePath2.endsWith(".c")) {
-        break;
-      }
-    }
     const functionContent = await getFunctionContentFromLineAndCharacter(
       removeFilePrefixFromFilePath(newFilePath2),
       newLine2,
@@ -739,7 +746,7 @@ ${description ? description : "not provided..."}
     return [newFilePath2, newLine2, newCharacter2, functionContent, item2];
   }
 
-  private isClangdRunning() {
+  private isGoplsRunning() {
     return client?.state === vscodelc.State.Running;
   }
 

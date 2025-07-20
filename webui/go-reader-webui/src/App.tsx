@@ -23,9 +23,8 @@ function App() {
   ]);
   const [isSettingPage, setIsSettingPage] = useState(false);
 
-  const [initClangdPath, setInitClangPath] = useState<string>("");
-  const [initLinuxPath, setInitLinuxPath] = useState<string>("");
-  const [initCompileCommandPath, setInitCompileCommandPath] = useState<string>("");
+  const [initGoplsPath, setInitGoplsPath] = useState<string>("");
+  const [initGoProjectPath, setInitGoProjectPath] = useState<string>("");
   const [initReportPath, setInitReportPath] = useState<string>("");
   const [initLlmName, setInitLlmName] = useState<"openai" | "anthropic" | "plamo" | "">("");
   const [initOpenAIApiKey, setInitOpenAIApiKey] = useState<string>("");
@@ -62,9 +61,8 @@ function App() {
         setMessages(parsedMessage.state);
         break;
       case "init":
-        setInitClangPath(parsedMessage.clangd);
-        setInitLinuxPath(parsedMessage.linuxPath);
-        setInitCompileCommandPath(parsedMessage.compileCommand);
+        setInitGoplsPath(parsedMessage.gopls);
+        setInitGoProjectPath(parsedMessage.goProjectPath);
         setInitReportPath(parsedMessage.report);
         setInitLlmName(parsedMessage.llmName);
         setInitOpenAIApiKey(parsedMessage.openaiApi);
@@ -74,7 +72,7 @@ function App() {
         setInitPlamoApiKey(parsedMessage.plamoApi);
         setInitGeminiApiKey(parsedMessage.geminiApi);
         setInitGeminiModelName(parsedMessage.geminiModel);
-        if (!parsedMessage.clangd || !parsedMessage.linuxPath || !parsedMessage.compileCommand) {
+        if (!parsedMessage.gopls || !parsedMessage.goProjectPath) {
           setIsSettingPage(true);
         }
         if (parsedMessage.llmName === "openai" && (!parsedMessage.openaiApi || !parsedMessage.openaiModel)) {
@@ -101,9 +99,8 @@ function App() {
       ?
       <SettingView
         setIsSettingPage={setIsSettingPage}
-        initClangdPath ={initClangdPath}
-        initLinuxPath={initLinuxPath}
-        initCompileCommandPath={initCompileCommandPath}
+        initGoplsPath ={initGoplsPath}
+        initGoProjectPath={initGoProjectPath}
         initReportPath={initReportPath}
         initLlmName={initLlmName}
         initOpenAIApiKey={initOpenAIApiKey}

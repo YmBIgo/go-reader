@@ -1,26 +1,25 @@
 import * as vscode from "vscode";
 import fs from "fs/promises";
 
-import { LinuxReader } from "./assistant";
+import { GoReader } from "./assistant";
 import { Message } from "./type/Message";
 import { AskResponse } from "./type/Response";
 import pWaitFor from "p-wait-for";
 import { LLMName } from "./llm";
 
 let view: vscode.WebviewView | vscode.WebviewPanel;
-let linuxReaderAssitant: LinuxReader | null;
+let linuxReaderAssitant: GoReader | null;
 
-export class LinuxLLMReaderProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = "linux-reader.SlidebarProvider";
+export class GoLLMReaderProvider implements vscode.WebviewViewProvider {
+  public static readonly viewType = "go-reader.SlidebarProvider";
   private disposables: vscode.Disposable[] = [];
   private allowedMessageType = [
     "Init",
     "InitHistory",
     "Reset",
     "Ask",
-    "Clangd",
-    "LinuxPath",
-    "CompileCommandPath",
+    "Gopls",
+    "GoProjectPath",
     "ReportPath",
     "LLMName",
     "OpenAIApiKey",
@@ -37,7 +36,7 @@ export class LinuxLLMReaderProvider implements vscode.WebviewViewProvider {
 
   async init() {
     await linuxReaderAssitant?.doGC();
-    linuxReaderAssitant = new LinuxReader(
+    linuxReaderAssitant = new GoReader(
       this.ask,
       this.say,
       this.sendError,
@@ -55,11 +54,10 @@ export class LinuxLLMReaderProvider implements vscode.WebviewViewProvider {
       // gemini
       ((await this.getGlobalState("GeminiModel")) as string) ?? "",
       ((await this.getSecret("GeminiApiKey")) as string) ?? "",
-      // clangd
-      ((await this.getGlobalState("clangdPath")) as string) ??
-        "/usr/bin/clangd",
-      ((await this.getGlobalState("linuxPath")) as string) ?? "",
-      ((await this.getGlobalState("compileCommand")) as string) ?? "",
+      // gopls
+      ((await this.getGlobalState("goplsPath")) as string) ??
+        "/opt/homebrew/bin/gopls",
+      ((await this.getGlobalState("goProjectPath")) as string) ?? "",
       ((await this.getGlobalState("report")) as string) ?? "~/Desktop"
     );
   }
@@ -190,7 +188,7 @@ export class LinuxLLMReaderProvider implements vscode.WebviewViewProvider {
         case "Reset":
           linuxReaderAssitant?.doGC();
           linuxReaderAssitant = null;
-          linuxReaderAssitant = new LinuxReader(
+          linuxReaderAssitant = new GoReader(
             this.ask,
             this.say,
             this.sendError,
@@ -208,11 +206,10 @@ export class LinuxLLMReaderProvider implements vscode.WebviewViewProvider {
             // gemini
             ((await this.getGlobalState("GeminiModel")) as string) ?? "",
             ((await this.getSecret("GeminiApiKey")) as string) ?? "",
-            // clangd
-            ((await this.getGlobalState("clangdPath")) as string) ??
-              "/usr/bin/clangd",
-            ((await this.getGlobalState("linuxPath")) as string) ?? "",
-            ((await this.getGlobalState("compileCommand")) as string) ?? "",
+            // gopls
+            ((await this.getGlobalState("goplsPath")) as string) ??
+              "/opt/homebrew/bin/gopls",
+            ((await this.getGlobalState("goProjectPath")) as string) ?? "",
             ((await this.getGlobalState("report")) as string) ?? "~/Desktop"
           );
           break;
@@ -221,19 +218,14 @@ export class LinuxLLMReaderProvider implements vscode.WebviewViewProvider {
           console.log("receive message", askResponse);
           linuxReaderAssitant?.handleWebViewAskResponse(askResponse);
           break;
-        case "Clangd":
-          const clangdPath = message.text;
-          this.updateGlobalState("clangdPath", clangdPath);
+        case "Gopls":
+          const goplsPath = message.text;
+          this.updateGlobalState("goplsPath", goplsPath);
           this.init();
           break;
-        case "LinuxPath":
-          const linuxPath = message.text;
-          this.updateGlobalState("linuxPath", linuxPath);
-          this.init();
-          break;
-        case "CompileCommandPath":
-          const compileCommandPath = message.text;
-          this.updateGlobalState("compileCommand", compileCommandPath);
+        case "GoProjectPath":
+          const goProjectPath = message.text;
+          this.updateGlobalState("goProjectPath", goProjectPath);
           this.init();
           break;
         case "ReportPath":
@@ -310,22 +302,19 @@ export class LinuxLLMReaderProvider implements vscode.WebviewViewProvider {
       ((await this.getGlobalState("GeminiModel")) as string) ??
       "gemini-2.0-flash";
     const geminiApi = ((await this.getSecret("GeminiApiKey")) as string) ?? "";
-    // clangd
-    const clangd =
-      ((await this.getGlobalState("clangdPath")) as string) ??
-      "/usr/bin/clangd";
-    const linuxPath =
-      ((await this.getGlobalState("linuxPath")) as string) ?? "";
-    const compileCommand =
-      ((await this.getGlobalState("compileCommand")) as string) ?? "";
+    // gopls
+    const gopls =
+      ((await this.getGlobalState("goplsPath")) as string) ??
+      "/opt/homebrew/bin/gopls";
+    const goProjectPath =
+      ((await this.getGlobalState("goProjectPath")) as string) ?? "";
     const report =
       ((await this.getGlobalState("report")) as string) ?? "~/Desktop";
     view.webview.postMessage(
       JSON.stringify({
         type: "init",
-        clangd,
-        linuxPath,
-        compileCommand,
+        gopls,
+        goProjectPath,
         report,
         llmName,
         openaiApi,
@@ -350,7 +339,7 @@ export class LinuxLLMReaderProvider implements vscode.WebviewViewProvider {
     // The JS file from the React build output
     const scriptUri = getUri(webview, this.context.extensionUri, [
       "webui",
-      "linux-reader-webui",
+      "go-reader-webui",
       "dist",
       "assets",
       "main.js",
