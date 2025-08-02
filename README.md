@@ -1,62 +1,66 @@
-## Go Reader とは？
-Go Reader とは、LLMと一緒にGoのコードを読むためのツールです。
+## What is Go Reader?
+Go Reader is a tool that helps you read Go code together with a Large Language Model (LLM).
 
-#### [できること]
-- 人がコードを読まずともLLMが関数探索してくれる
-- 前に進んだ関数経路に戻れる
-- 調べている関数経路のバグをLLMが見つけてくれる
-- 調べている関数をLLMが図にしてくれる
-- 調べた関数経路をLLMがレポートにしてくれる
+#### [Features]
 
-#### [効果]
-- Goコードをランダムウォークなしに読み進められる
-- 土地勘がないと10分以上かかる数百行、数千行の関数のコードリーディングを、LLMが1分で終わらせてくれる
-- Goコードのバグを見つけられる機能がある
-- 頭にいれるだけで暗黙知になりがちな関数経路や関数の説明をLLMがしてくれる
+- Allows the LLM to explore functions without requiring manual reading
+- Lets you backtrack through previously explored function paths
+- Helps detect bugs in the currently investigated function path using the LLM
+- Visualizes the function under investigation as a diagram
+- Summarizes the explored function path into a report using the LLM
+- Exports and imports the explored function path as JSON
 
-#### [できないこと/人の作業]
-- エントリーポイントの把握
-- LLMによる関数自動探索（人が判断した方が正確）
-- コードベースを分割せず一括でLLMに調べさせること
+#### [Benefits]
 
-## 利用方法
-VSCode拡張としてはまだ公開していません。  
-公開し次第、VSCode拡張でのインストール方法を書きます。
+- Enables you to navigate Go code without aimless random walks
+- Allows the LLM to summarize hundreds or thousands of lines of function code in under a minute—something that could take over 10 minutes without prior knowledge of the codebase
+- Includes functionality for detecting bugs in Go code
+- Provides explanations of function paths and logic that would otherwise remain implicit knowledge
 
-#### 用意するもの
-gopls, vscode(1.100.0以上), OpenAIかAnthropicかPLaMoのAPIキー
+#### [Limitations / Human Tasks]
+- Identifying the entry point of the codebase
+- Choosing which functions to explore (LLM-driven auto-exploration is less accurate)
+- It cannot analyze the entire codebase at once without splitting it into parts
 
-1. goplsの準備
+#### How to Use
+1. Install gopls
 
-```
+```bash
 brew install gopls
 ```
 
-2. vscode のインストール
+2. Install VS Code
 
-1.100.0 以上をインストールしてください
+Please install version 1.100.0 or later of Visual Studio Code.
 
-3. VSCode で GoReader をダウンロード
+3. Install GoReader
 
-https://marketplace.visualstudio.com/items?itemName=coffeecupjapan.go-reader&ssr=false#overview
+Download Go-Reader at [vscode store](https://marketplace.visualstudio.com/items?itemName=coffeecupjapan.go-reader&ssr=false#overview).
 
-#### 開く
-ダウンロード完了したら、「Command + Shift + p」でコマンドパレットを開き、「Open Go-Reader Tab」をクリック  
-クリック後に、右側にタブウィンドウが出てくれば成功です
+https://marketplace.visualstudio.com/items?itemName=coffeecupjapan.go-reader&ssr=false#overview 
 
-4. 設定の入力
-goplsのパス、LLM（OpenAI・Claude・Plamo）を入力
+4. Open the Extension
+Once downloaded, open the Command Palette with Command + Shift + P, and click “Open Go Reader Tab”. If a tab opens on the right side, it was successful.
 
-5. チャット画面で探索を開始
-最初に、「探索を開始するファイルパス」「探索を開始する関数」「探索の目的」を入力すれば、探索を開始できます。
+5. Configure settings
+Provide the path to gopls and select your preferred LLM (OpenAI, Claude, or Plamo).
 
-6. 探索を制御
-しばらくすると、LLMが関数の中から重要な関数を選ぶので、そこから内容を探索したい関数を選択します。  
-すると、またLLMが関数の中から重要な関数を選ぶので、そこから再度探索したい関数を選択します。  
-以上の流れを、自分がいいと思うまで続けます。
+6. Start exploration in the chat UI
+
+To begin, input the following:
+
+- File path to start exploring
+- Function to start from
+- Purpose of the exploration
+
+This will initiate the analysis process.
+
+7. Guide the Exploration
+
+The LLM will suggest important functions within the current function. You then select which one to explore next. This process repeats as long as you like, allowing you to explore deeper step by step.
 
 ## Release Notes
 
 #### 1.0.0
 
-GoReaderの最初のリリース
+GoReader's initial release

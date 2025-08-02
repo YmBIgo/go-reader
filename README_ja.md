@@ -7,6 +7,7 @@ Go Reader とは、LLMと一緒にGoのコードを読むためのツールで�
 - 調べている関数経路のバグをLLMが見つけてくれる
 - 調べている関数をLLMが図にしてくれる
 - 調べた関数経路をLLMがレポートにしてくれる
+- 調べた関数経路をJSONにしてインポート・エクスポートできる
 
 #### [効果]
 - Goコードをランダムウォークなしに読み進められる
@@ -29,17 +30,24 @@ brew install gopls
 
 2. vscode のインストール
 
+vscode 1.100.0以上のものをインストールしてください
+
 3. GoReader のインストール
 
-```
-git clone https://github.com/YmBIgo/GoReader
-```
+vs code で [download](https://marketplace.visualstudio.com/items?itemName=coffeecupjapan.go-reader&ssr=false#overview) してください。
 
-4. 設定の入力
-goplsのパス、LLM（OpenAI・Claude・Plamo）を入力
+https://marketplace.visualstudio.com/items?itemName=coffeecupjapan.go-reader&ssr=false#overview 
 
-5. チャット画面で探索を開始
+4. VS拡張機能を開く
+
+ダウンロードができたら、「コマンドパレットを開き（Command + Shift + P）」、「Open Go Reader Tab」を入力して、右側にタブが出てきたら成功です
+
+5. 設定の入力
+goplsのパス、LLM（OpenAI・Claude・Plamo・Gemini）を入力
+
+6. チャット画面で探索を開始
 最初に、「探索を開始するファイルパス」「探索を開始する関数」「探索の目的」を入力すれば、探索を開始できます。
 
-6. 探索を制御
-探索に成功すると、
+7. 探索を制御する
+
+探索を開始すると、LLMが現在の関数の中から重要な関数を推薦してくれます。なのであなたはその中から重要そうな次に探索したい関数を選びます。このプロセスはあなたがいいと思うまで続け、探索を続けます。

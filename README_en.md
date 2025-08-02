@@ -1,71 +1,60 @@
-# go-reader README
+## What is Go Reader?
+Go Reader is a tool that helps you read Go code together with a Large Language Model (LLM).
 
-This is the README for your extension "go-reader". After writing up a brief description, we recommend including the following sections.
+#### [Features]
 
-## Features
+- Allows the LLM to explore functions without requiring manual reading
+- Lets you backtrack through previously explored function paths
+- Helps detect bugs in the currently investigated function path using the LLM
+- Visualizes the function under investigation as a diagram
+- Summarizes the explored function path into a report using the LLM
+- Exports and imports the explored function path as JSON
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+#### [Benefits]
 
-For example if there is an image subfolder under your extension project workspace:
+- Enables you to navigate Go code without aimless random walks
+- Allows the LLM to summarize hundreds or thousands of lines of function code in under a minute—something that could take over 10 minutes without prior knowledge of the codebase
+- Includes functionality for detecting bugs in Go code
+- Provides explanations of function paths and logic that would otherwise remain implicit knowledge
 
-\!\[feature X\]\(images/feature-x.png\)
+#### [Limitations / Human Tasks]
+- Identifying the entry point of the codebase
+- Choosing which functions to explore (LLM-driven auto-exploration is less accurate)
+- It cannot analyze the entire codebase at once without splitting it into parts
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+#### How to Use
+1. Install gopls
 
-## Requirements
+```bash
+brew install gopls
+```
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+2. Install VS Code
 
-## Extension Settings
+Please install version 1.100.0 or later of Visual Studio Code.
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+3. Install GoReader
 
-For example:
+Download Go-Reader at [vscode store](https://marketplace.visualstudio.com/items?itemName=coffeecupjapan.go-reader&ssr=false#overview).
 
-This extension contributes the following settings:
+https://marketplace.visualstudio.com/items?itemName=coffeecupjapan.go-reader&ssr=false#overview 
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+4. Open the Extension
+Once downloaded, open the Command Palette with Command + Shift + P, and click “Open Go Reader Tab”. If a tab opens on the right side, it was successful.
 
-## Known Issues
+5. Configure settings
+Provide the path to gopls and select your preferred LLM (OpenAI, Claude, or Plamo).
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+6. Start exploration in the chat UI
 
-## Release Notes
+To begin, input the following:
 
-Users appreciate release notes as you update your extension.
+- File path to start exploring
+- Function to start from
+- Purpose of the exploration
 
-### 1.0.0
+This will initiate the analysis process.
 
-Initial release of ...
+7. Guide the Exploration
 
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+The LLM will suggest important functions within the current function. You then select which one to explore next. This process repeats as long as you like, allowing you to explore deeper step by step.

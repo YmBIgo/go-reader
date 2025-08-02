@@ -1,8 +1,8 @@
 {
   "name": "go-reader",
   "displayName": "go-reader",
-  "description": " Go のソースコードをLLMと一緒に効率的に読むための VSCode 拡張",
-  "version": "1.0.3",
+  "description": "LLM tool which aim to read large ruby codebase",
+  "version": "1.0.0",
   "type": "commonjs",
   "icon": "logo.png",
   "engines": {
