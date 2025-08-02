@@ -61,6 +61,10 @@ The LLM will suggest important functions within the current function. You then s
 
 ## Release Notes
 
+#### 1.0.1
+
+Fix language / add logo
+
 #### 1.0.0
 
 GoReader's initial release
