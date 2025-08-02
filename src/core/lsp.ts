@@ -18,7 +18,7 @@ export async function getFunctionContentFromLineAndCharacter(
   const failSafeFileContent = fileContentSplit
     .slice(line, line + 20)
     .join("\n");
-  if (!failSafeFileContent.includes("{")) {
+  if (!failSafeFileContent.includes("{") && !failSafeFileContent.includes("func ")) {
     return fileContentSplit.slice(line, line + 5).join("\n");
   }
   let fileResultArray = [];
@@ -90,10 +90,9 @@ export async function getFileLineAndCharacterFromFunctionName(
   const wholeFunctionName = !memberAccessFunctionName.includes("(") && memberAccessFunction.length === 1
     ? memberAccessFunctionName + "("
     : memberAccessFunctionName;
-  const simplfiedFunctionName = isFirst || memberAccessFunction.length > 1
-    ? [wholeFunctionName.split(",")[0].replace(/^[\s]*/g, "")]
-    : [" " + wholeFunctionName.split(",")[0].replace(/^[\s]*/g, ""),
-      "\t" + wholeFunctionName.split(",")[0].replace(/^[\s]*/g, "")];
+  const simplfiedFunctionRegexp = isFirst || memberAccessFunction.length > 1
+    ? new RegExp(`${escapeRegExp(wholeFunctionName)}`)
+    : new RegExp(`\\s*${escapeRegExp(wholeFunctionName)}`);
   const fileContentArray = fileContent.split("\n");
   let isLongComment = false;
   for (let i in fileContentArray) {
@@ -130,19 +129,20 @@ export async function getFileLineAndCharacterFromFunctionName(
     if (isLongComment) {
       continue;
     }
-    let functionIndex = row.indexOf(simplfiedFunctionName[0]);
-    if (!isFirst && functionIndex >= 0) {
-      functionIndex += 1;
+    if (!row.includes(functionName)) {
+      continue;
     }
-    if (functionIndex === -1 && simplfiedFunctionName.length === 2) {
-      functionIndex = row.indexOf(simplfiedFunctionName[1]);
-      if (!isFirst && functionIndex >= 0) {
-        functionIndex += 1;
-      }
+    let functionIndex = row.search(simplfiedFunctionRegexp);
+    if (functionIndex >= 0) {
+      functionIndex += 1;
     }
     if (functionIndex >= 0) {
       return [index, functionIndex];
     }
   }
   return [-1, -1];
+}
+
+function escapeRegExp(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

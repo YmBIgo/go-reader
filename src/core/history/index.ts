@@ -28,12 +28,13 @@ export class HistoryHandler {
     private choiceTree: ChoiceTree;
     private currentChoicePosition: ChoicePosition[];
     private visualizeResult: string;
-    constructor(rootPath: string, rootFunctionName: string, rootFunctionCodeLine: string) {
+    constructor(rootPath: string, rootFunctionName: string, rootFunctionCodeLine: string, rootFunctionContent: string) {
         this.rootPath = rootPath;
         const rootChoice: Choice = {
             functionName: rootFunctionName,
             functionCodeLine: rootFunctionCodeLine,
             originalFilePath: rootPath,
+            functionCodeContent: rootFunctionContent,
             id: generateHexString()
         };
         this.choiceTree = {
@@ -113,8 +114,11 @@ export class HistoryHandler {
     private move(selectedChoicePosition: ChoicePosition[]) {
         this.currentChoicePosition = selectedChoicePosition;
     }
-    moveById(id: string): Choice | null {
-        const searchResult = this.searchTreeById(this.choiceTree, id, 0, 0, []);
+    moveById(
+        id: string,
+        foundCallback?: (st: ChoiceTree) => void
+    ): Choice | null {
+        const searchResult = this.searchTreeById(this.choiceTree, id, 0, 0, [], foundCallback);
         if (!searchResult || !searchResult.pos.length) {
             console.log(`id not found for ${id} ...`);
             return null;
@@ -122,7 +126,14 @@ export class HistoryHandler {
         this.move(searchResult.pos);
         return searchResult.processChoice;
     }
-    searchTreeById(searchChoiceTree: ChoiceTree, id: string, depth: number, width: number, searchPath: ChoicePosition[]): {pos: ChoicePosition[], processChoice: Choice} | null {
+    searchTreeById(
+        searchChoiceTree: ChoiceTree,
+        id: string,
+        depth: number,
+        width: number,
+        searchPath: ChoicePosition[],
+        foundCallback?: (st: ChoiceTree) => void,
+    ): {pos: ChoicePosition[], processChoice: Choice} | null {
         const newSearchPath = [...searchPath, {depth, width}];
         const isSame = searchChoiceTree.content.id.slice(0, 7) === id;
         if (isSame) {
@@ -133,6 +144,9 @@ export class HistoryHandler {
             const result = this.searchTreeById(st, id, depth+1, index, newSearchPath);
             if (result) {
                 res = result;
+                if (foundCallback) {
+                    foundCallback(st);
+                }
             }
         });
         return res;
