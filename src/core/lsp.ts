@@ -27,13 +27,13 @@ export async function getFunctionContentFromLineAndCharacter(
   let isLongComment = false;
   for (let row of fileContentStart) {
     fileResultArray.push(row);
-    if (row.replace(/\s/g, "").startsWith("//")) {
+    if (row.replace(/^\s+/g, "").startsWith("//")) {
       continue;
     }
     let commentStartIndex: number = -1;
     let commentEndIndex: number = -1;
-    const longCommentStart = row.matchAll(/\/\*/g);
-    const longCommentEnd = row.matchAll(/\*\//g);
+    const longCommentStart = row.matchAll(/^("|'|`)\/\*/g);
+    const longCommentEnd = row.matchAll(/^("|'|`)\*\//g);
     for (const start_m of longCommentStart) {
       commentStartIndex = start_m.index;
       // 最初で破棄
@@ -67,7 +67,7 @@ export async function getFunctionContentFromLineAndCharacter(
       return fileResultArray.join("\n");
     }
   }
-  console.error("error", startArrowCount, endArrowCount);
+  console.error("error counting row...", startArrowCount, endArrowCount);
   return "";
 }
 
@@ -84,10 +84,14 @@ export async function getFileLineAndCharacterFromFunctionName(
     console.error(e);
     return [-1, -1];
   }
-  const memberAccessFunction = functionName.split(".");
-  const memberAccessFunctionName =
-    memberAccessFunction[memberAccessFunction.length - 1];
-  const wholeFunctionName = !memberAccessFunctionName.includes("(") && memberAccessFunction.length === 1
+  const memberAccessFunction = isFirst ? functionName.split(")") : functionName.split(".");
+  const memberAccessFunctionName = isFirst && memberAccessFunction.length > 2
+    // func (mx *Mux) Mount(pattern string, handler http.Handler) { のように () で挟まっている場合
+    ? memberAccessFunction[memberAccessFunction.length - 2]
+    : memberAccessFunction[memberAccessFunction.length - 1];
+  const wholeFunctionName = isFirst
+    ? memberAccessFunctionName
+    : !memberAccessFunctionName.includes("(") && memberAccessFunction.length === 1
     ? memberAccessFunctionName + "("
     : memberAccessFunctionName;
   const simplfiedFunctionRegexp = isFirst || memberAccessFunction.length > 1
@@ -103,8 +107,8 @@ export async function getFileLineAndCharacterFromFunctionName(
     }
     let commentStartIndex: number = -1;
     let commentEndIndex: number = -1;
-    const longCommentStart = row.matchAll(/\/\*/g);
-    const longCommentEnd = row.matchAll(/\*\//g);
+    const longCommentStart = row.matchAll(/^("|'|`)\/\*/g);
+    const longCommentEnd = row.matchAll(/^("|'|`)\*\//g);
     for (const start_m of longCommentStart) {
       commentStartIndex = start_m.index;
       // 最初で破棄
@@ -131,6 +135,9 @@ export async function getFileLineAndCharacterFromFunctionName(
     }
     if (!row.includes(functionName)) {
       continue;
+    }
+    if (!row.includes(functionName)) {
+      continue
     }
     let functionIndex = row.search(simplfiedFunctionRegexp);
     if (functionIndex >= 0) {
