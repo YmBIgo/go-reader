@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { LLMModel } from "./model";
+import { ThinkingBlock } from "@anthropic-ai/sdk/resources/messages";
 
 const MAX_RETRY = 3;
 
@@ -15,7 +16,8 @@ export class AnthropicHandler implements LLMModel {
   async createMessage(
     systemPrompt: string,
     history: Anthropic.Messages.MessageParam[],
-    isJSON: boolean
+    isJSON: boolean,
+    isReasoning?: boolean,
   ): Promise<string> {
     try {
       const response = await this.client.messages.create({
@@ -23,6 +25,13 @@ export class AnthropicHandler implements LLMModel {
         system: systemPrompt,
         max_tokens: 8192,
         messages: history,
+        thinking : isReasoning ? {
+          type: "enabled",
+          budget_tokens: 4096
+        } : {
+          type: "disabled",
+        },
+        temperature: isReasoning ? 1.0 : 0.0
       });
       const type = response.content[0].type;
       if (type === "text") {
@@ -33,6 +42,16 @@ export class AnthropicHandler implements LLMModel {
         }
         return response.content[0].text
           .replace("```json", "")
+          .replace(/```/g, "");
+      } else if (type === "thinking") {
+        if (isJSON) {
+          response.content.map((c) => (c as ThinkingBlock).thinking
+            .replace("```json", "")
+            .replace(/```/g, "")
+          ).every((c) => JSON.stringify(c))
+        }
+        return response.content.map((c) => (c as ThinkingBlock).thinking).join("\n")
+          .replace(/```json/g, "")
           .replace(/```/g, "");
       } else if (type === "web_search_tool_result") {
         return Array.isArray(response.content[0].content)
@@ -46,7 +65,7 @@ export class AnthropicHandler implements LLMModel {
       if (this.attemptCount >= MAX_RETRY) {
         throw new Error("fail to get api anthropic response");
       }
-      return this.createMessage(systemPrompt, history, isJSON);
+      return this.createMessage(systemPrompt, history, isJSON, isReasoning);
     }
   }
   getModel() {

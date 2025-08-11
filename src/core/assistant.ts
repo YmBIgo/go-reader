@@ -641,16 +641,18 @@ ${functionContent}
     const userPrompt = `<functions or methods>
 ${result}
 <the potential bugs (optional)>
-${description ? description : "not provided..."}
+${description.ask ? description.ask : "not provided..."}
 `;
     const history: Anthropic.MessageParam[] = [
       { role: "user", content: userPrompt },
     ];
     const response =
-      (await this.apiHandler?.createMessage(bugFixPrompt, history, false)) ||
+      (await this.apiHandler?.createMessage(bugFixPrompt, history, false, true)) ||
       "failed to get result";
-    this.saySocket("Generate Bugs Report. Done!");
+    const fileName = `bugreport_${Date.now()}.txt`;
+    await fs.writeFile(`${this.saveReportFolder}/${fileName}`, response + "\n\n" + result);
     this.saySocket(response);
+    this.saySocket(`Generate Bugs Report Done! File is created @${this.saveReportFolder}/${fileName}`);
   }
   private async saveChoiceTree() {
     const choiceTreeWithAdditionalInfo = {

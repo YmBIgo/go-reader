@@ -18,18 +18,20 @@ export async function getFunctionContentFromLineAndCharacter(
   const failSafeFileContent = fileContentSplit
     .slice(line, line + 20)
     .join("\n");
-  if (!failSafeFileContent.includes("{") && !failSafeFileContent.includes("func ")) {
+  if (!failSafeFileContent.match(/\{$/g) && !failSafeFileContent.includes("func ")) {
     return fileContentSplit.slice(line, line + 5).join("\n");
   }
   let fileResultArray = [];
   let startArrowCount = 0;
   let endArrowCount = 0;
   let isLongComment = false;
+  const commentEndRegexp = /\s*\/\/.*$/g
   for (let row of fileContentStart) {
     fileResultArray.push(row);
     if (row.replace(/^\s+/g, "").startsWith("//")) {
       continue;
     }
+    row = row.replace(commentEndRegexp, "");
     let commentStartIndex: number = -1;
     let commentEndIndex: number = -1;
     const longCommentStart = row.matchAll(/^("|'|`)\/\*/g);
@@ -58,8 +60,8 @@ export async function getFunctionContentFromLineAndCharacter(
     if (isLongComment) {
       continue;
     }
-    startArrowCount += row.match(/\{/g)?.length ?? 0;
-    endArrowCount += row.match(/\}/g)?.length ?? 0;
+    startArrowCount += row.match(/\{\s*$/g)?.length ?? 0;
+    endArrowCount += row.match(/^\s*\}/g)?.length ?? 0;
     if (
       startArrowCount === endArrowCount &&
       startArrowCount + endArrowCount !== 0
@@ -89,14 +91,12 @@ export async function getFileLineAndCharacterFromFunctionName(
     // func (mx *Mux) Mount(pattern string, handler http.Handler) { のように () で挟まっている場合
     ? memberAccessFunction[memberAccessFunction.length - 2]
     : memberAccessFunction[memberAccessFunction.length - 1];
-  const wholeFunctionName = isFirst
-    ? memberAccessFunctionName
-    : !memberAccessFunctionName.includes("(") && memberAccessFunction.length === 1
-    ? memberAccessFunctionName + "("
-    : memberAccessFunctionName;
-  const simplfiedFunctionRegexp = isFirst || memberAccessFunction.length > 1
-    ? new RegExp(`${escapeRegExp(wholeFunctionName)}`)
-    : new RegExp(`\\s*${escapeRegExp(wholeFunctionName)}`);
+  const wholeFunctionName = memberAccessFunctionName;
+  const simplfiedFunctionRegexp = !memberAccessFunctionName.includes("(") && memberAccessFunction.length === 1
+    ? new RegExp(`${escapeRegExp(wholeFunctionName + "(")}`)
+    : isFirst || memberAccessFunction.length > 1
+    ? new RegExp(`${escapeRegExp(wholeFunctionName)}[^a-zA-Z0-9]*`)
+    : new RegExp(`\\s*${escapeRegExp(wholeFunctionName)}[^a-zA-Z0-9]*`);
   const fileContentArray = fileContent.split("\n");
   let isLongComment = false;
   for (let i in fileContentArray) {
@@ -136,8 +136,8 @@ export async function getFileLineAndCharacterFromFunctionName(
     if (!row.includes(functionName)) {
       continue;
     }
-    if (!row.includes(functionName)) {
-      continue
+    if (!row.includes(codeLine)){
+      continue;
     }
     let functionIndex = row.search(simplfiedFunctionRegexp);
     if (functionIndex >= 0) {

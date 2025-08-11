@@ -5,7 +5,7 @@ import { PlamoHanlder } from "./plamo";
 
 export type LLMName = "anthropic" | "openai" | "plamo" | "gemini"
 
-export function buildLLMHanlder(llmName: LLMName, modelName: string, apiKey: string) {
+export function buildLLMHanlder(llmName: LLMName, modelName: string, apiKey: string, isReasoning?: boolean) {
     switch(llmName){
         case "anthropic":
             return new AnthropicHandler(modelName, apiKey);
