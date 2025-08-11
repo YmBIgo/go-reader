@@ -2,7 +2,7 @@
   "name": "go-reader",
   "displayName": "go-reader",
   "description": "LLM tool which aim to read large go codebase",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "commonjs",
   "icon": "logo.png",
   "engines": {
