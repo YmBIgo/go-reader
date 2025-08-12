@@ -18,7 +18,8 @@ export async function getFunctionContentFromLineAndCharacter(
   const failSafeFileContent = fileContentSplit
     .slice(line, line + 20)
     .join("\n");
-  if (!failSafeFileContent.match(/\{$/g) && !failSafeFileContent.includes("func ")) {
+  const [_, failSafeContent] = getFunctionDefinitionLines(failSafeFileContent);
+  if (!failSafeContent.includes("func ")) {
     return fileContentSplit.slice(line, line + 5).join("\n");
   }
   let fileResultArray = [];
@@ -71,6 +72,28 @@ export async function getFunctionContentFromLineAndCharacter(
   }
   console.error("error counting row...", startArrowCount, endArrowCount);
   return "";
+}
+
+//その行が関数定義かを判定
+function getFunctionDefinitionLines(functionContent: string): [boolean, string] {
+  const functionContentSplit = functionContent.split("\n");
+  let startArrowCount = 0;
+  let endArrowCount = 0;
+  let isFunctionArrowExists = false;
+  let resultFunctionContent = "";
+  for(let functionContentRow of functionContentSplit) {
+    resultFunctionContent += functionContentRow + "\n";
+    startArrowCount += functionContentRow.split("").filter((t) => t === "(").length;
+    endArrowCount += functionContentRow.split("").filter((t) => t === ")").length;
+    if (functionContentRow.includes("{")) {
+      isFunctionArrowExists = true;
+    }
+    if (functionContentRow.includes("}")) {
+      break;
+    }
+  }
+  if (startArrowCount === endArrowCount && isFunctionArrowExists) return [true, resultFunctionContent];
+  return [false, resultFunctionContent]
 }
 
 export async function getFileLineAndCharacterFromFunctionName(

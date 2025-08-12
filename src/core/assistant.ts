@@ -119,20 +119,20 @@ export class GoReader {
       llmName === "openai"
         ? openAIModel
         : llmName === "anthropic"
-        ? anthropicModel
-        : llmName === "gemini"
-        ? geminiModel
-        : "";
+          ? anthropicModel
+          : llmName === "gemini"
+            ? geminiModel
+            : "";
     const apiKey =
       llmName === "openai"
         ? openAIApiKey
         : llmName === "anthropic"
-        ? anthropicApiKey
-        : llmName === "plamo"
-        ? plamoApiKey
-        : llmName === "gemini"
-        ? geminiApiKey
-        : "unknown llm name";
+          ? anthropicApiKey
+          : llmName === "plamo"
+            ? plamoApiKey
+            : llmName === "gemini"
+              ? geminiApiKey
+              : "unknown llm name";
     this.apiHandler = buildLLMHanlder(llmName, modelType, apiKey);
     this.saveReportFolder = reportPath;
     if (!goplsPath || !goProjectPath) {
@@ -338,77 +338,77 @@ ${functionContent}
           }
           return false;
         }) ??
-        fileContentArray.find((fcr) => {
-          const spaceRemovedRow = fcr.replace(/ /g, "").replace(/\t/g, "");
-          let commentStartIndex: number = -1;
-          let commentEndIndex: number = -1;
-          const longCommentStart = spaceRemovedRow.matchAll(/\/\*/g);
-          const longCommentEnd = spaceRemovedRow.matchAll(/\*\//g);
-          for (const start_m of longCommentStart) {
-            commentStartIndex = start_m.index;
-            // 最初で破棄
-            break;
-          }
-          for (const end_m of longCommentEnd) {
-            // 最後まで読む
-            commentEndIndex = end_m.index;
-          }
-          if (
-            commentStartIndex !== -1 &&
-            commentEndIndex !== -1 &&
-            commentStartIndex < commentEndIndex
-          ) {
-            // 1行のコメントなのでskip
-          } else if (isLongComment && commentEndIndex !== -1) {
-            // 一旦複雑なケースは考慮しない（コメントの中でのコメント定義など）
-            isLongComment = false;
-          } else if (!isLongComment && commentStartIndex !== -1) {
-            isLongComment = true;
-          }
-          if (isLongComment) {
-            return;
-          }
-          if (spaceRemovedRow.startsWith("//")) {
-            return;
-          }
-        }) ??
-        each_r.code_line.includes(each_r["name"])
+          fileContentArray.find((fcr) => {
+            const spaceRemovedRow = fcr.replace(/ /g, "").replace(/\t/g, "");
+            let commentStartIndex: number = -1;
+            let commentEndIndex: number = -1;
+            const longCommentStart = spaceRemovedRow.matchAll(/\/\*/g);
+            const longCommentEnd = spaceRemovedRow.matchAll(/\*\//g);
+            for (const start_m of longCommentStart) {
+              commentStartIndex = start_m.index;
+              // 最初で破棄
+              break;
+            }
+            for (const end_m of longCommentEnd) {
+              // 最後まで読む
+              commentEndIndex = end_m.index;
+            }
+            if (
+              commentStartIndex !== -1 &&
+              commentEndIndex !== -1 &&
+              commentStartIndex < commentEndIndex
+            ) {
+              // 1行のコメントなのでskip
+            } else if (isLongComment && commentEndIndex !== -1) {
+              // 一旦複雑なケースは考慮しない（コメントの中でのコメント定義など）
+              isLongComment = false;
+            } else if (!isLongComment && commentStartIndex !== -1) {
+              isLongComment = true;
+            }
+            if (isLongComment) {
+              return;
+            }
+            if (spaceRemovedRow.startsWith("//")) {
+              return;
+            }
+          }) ??
+          each_r.code_line.includes(each_r["name"])
           ? each_r.code_line
           : fileContentArray.find((fcr) => {
-              const spaceRemovedRow = fcr.replace(/ /g, "").replace(/\t/g, "");
-              if (spaceRemovedRow.startsWith("//")) {
-                return false;
-              }
-              let commentStartIndex: number = -1;
-              let commentEndIndex: number = -1;
-              const longCommentStart = spaceRemovedRow.matchAll(/\/\*/g);
-              const longCommentEnd = spaceRemovedRow.matchAll(/\*\//g);
-              for (const start_m of longCommentStart) {
-                commentStartIndex = start_m.index;
-                // 最初で破棄
-                break;
-              }
-              for (const end_m of longCommentEnd) {
-                // 最後まで読む
-                commentEndIndex = end_m.index;
-              }
-              if (
-                commentStartIndex !== -1 &&
-                commentEndIndex !== -1 &&
-                commentStartIndex < commentEndIndex
-              ) {
-                // 1行のコメントなのでskip
-              } else if (isLongComment2 && commentEndIndex !== -1) {
-                // 一旦複雑なケースは考慮しない（コメントの中でのコメント定義など）
-                isLongComment2 = false;
-              } else if (!isLongComment && commentStartIndex !== -1) {
-                isLongComment2 = true;
-              }
-              if (isLongComment2) {
-                return false;
-              }
-              return fcr.includes(each_r["name"]);
-            }) ?? each_r["name"];
+            const spaceRemovedRow = fcr.replace(/ /g, "").replace(/\t/g, "");
+            if (spaceRemovedRow.startsWith("//")) {
+              return false;
+            }
+            let commentStartIndex: number = -1;
+            let commentEndIndex: number = -1;
+            const longCommentStart = spaceRemovedRow.matchAll(/\/\*/g);
+            const longCommentEnd = spaceRemovedRow.matchAll(/\*\//g);
+            for (const start_m of longCommentStart) {
+              commentStartIndex = start_m.index;
+              // 最初で破棄
+              break;
+            }
+            for (const end_m of longCommentEnd) {
+              // 最後まで読む
+              commentEndIndex = end_m.index;
+            }
+            if (
+              commentStartIndex !== -1 &&
+              commentEndIndex !== -1 &&
+              commentStartIndex < commentEndIndex
+            ) {
+              // 1行のコメントなのでskip
+            } else if (isLongComment2 && commentEndIndex !== -1) {
+              // 一旦複雑なケースは考慮しない（コメントの中でのコメント定義など）
+              isLongComment2 = false;
+            } else if (!isLongComment && commentStartIndex !== -1) {
+              isLongComment2 = true;
+            }
+            if (isLongComment2) {
+              return false;
+            }
+            return fcr.includes(each_r["name"]);
+          }) ?? each_r["name"];
       parsedContentCodeLineArray.push(fileCodeLine);
       askQuestion += `${index} : ${each_r.name}\n`;
       askQuestion += `Details : ${each_r.description}\n`;
@@ -425,7 +425,7 @@ ${functionContent}
     let resultNumber = 0;
     let result: AskResponse | null = null;
     this.saySocket(`${askQuestion}`);
-    for (;;) {
+    for (; ;) {
       result = await this.askSocket(`Please enter the index of the detail you want to display:
 - Enter 5 to retry
 - Enter 6 to display the history as a tree structure
@@ -462,35 +462,8 @@ ${functionContent}
         continue;
       }
       if (resultNumber === 8) {
-        try {
-          const openDoc = await vscode.workspace.openTextDocument(
-            currentFilePath
-          );
-          await vscode.window.showTextDocument(openDoc, {
-            preview: false, // タブの使い回しを避ける場合は false
-            preserveFocus: false, // エディタにフォーカスを移す
-          });
-          const openDocText = openDoc.getText().split("\n");
-          const functionLines = functionContent.split("\n").filter((fcr) => {
-            return fcr.replace(/\s\t/g, "") !== "";
-          });
-          let functionStartLine = functionLines[0];
-          let functionEndLine = functionLines.at(-1);
-          const functionStartLineIndex =
-            openDocText.findIndex((odt) => odt === functionStartLine) ?? 0;
-          const positionStart = new vscode.Position(functionStartLineIndex, 0);
-          const positionEnd = new vscode.Position(
-            functionStartLineIndex + functionContent.split("\n").length,
-            functionEndLine?.length ?? 10000
-          );
-          const selection = new vscode.Selection(positionStart, positionEnd);
-          vscode.window.activeTextEditor!.selection = selection;
-          // this.saySocket("\n\n----------\n" + functionContent + "\n----------\n\n");
-          continue;
-        } catch (e) {
-          console.warn(e);
-          continue;
-        }
+        this.jumpToCode(currentFilePath, functionContent)
+        continue;
       } else if (resultNumber === 9) {
         await this.getMermaid(functionContent);
         continue;
@@ -540,11 +513,46 @@ ${functionContent}
       this.saveChoiceTree();
       return;
     }
+    this.jumpToCode(removeFilePrefixFromFilePath(newFile), newFunctionContent);
     this.historyHanlder?.choose(resultNumber, newFunctionContent);
     this.saySocket(
       `LLM is searching ${newFile}@${newLine}:${newCharacter}.`
     );
     this.runTask(removeFilePrefixFromFilePath(newFile), newFunctionContent);
+  }
+
+  private async jumpToCode(currentFilePath: string, functionContent: string) {
+    try {
+      const openDoc = await vscode.workspace.openTextDocument(
+        currentFilePath
+      );
+      await vscode.window.showTextDocument(openDoc, {
+        preview: false, // タブの使い回しを避ける場合は false
+        preserveFocus: false, // エディタにフォーカスを移す
+      });
+      const openDocText = openDoc.getText().split("\n");
+      const functionLines = functionContent.split("\n").filter((fcr) => {
+        return fcr.replace(/\s\t/g, "") !== "";
+      });
+      let functionStartLine = functionLines[0];
+      let functionEndLine = functionLines.at(-1);
+      const functionStartLineIndex =
+        openDocText.findIndex((odt) => odt === functionStartLine) ?? 0;
+      const positionStart = new vscode.Position(functionStartLineIndex, 0);
+      const positionEnd = new vscode.Position(
+        functionStartLineIndex + functionContent.split("\n").length,
+        functionEndLine?.length ?? 10000
+      );
+      const selection = new vscode.Selection(positionStart, positionEnd);
+      vscode.window.activeTextEditor!.selection = selection;
+      vscode.window.activeTextEditor?.revealRange(
+        new vscode.Range(positionStart, positionEnd),
+        vscode.TextEditorRevealType.AtTop
+      )
+      // this.saySocket("\n\n----------\n" + functionContent + "\n----------\n\n");
+    } catch (e) {
+      console.warn(e);
+    }
   }
 
   private async runHistoryPoint(historyHash: string) {
@@ -679,7 +687,8 @@ ${description.ask ? description.ask : "not provided..."}
     filePath: string,
     line: number,
     character: number,
-    shouldWaitMs: number = 2000
+    shouldWaitMs: number = 2000,
+    requestType: string = "textDocument/definition"
   ): Promise<[string, number, number, any]> {
     console.log(line, character);
     let itemString: string = "";
@@ -699,7 +708,7 @@ ${description.ask ? description.ask : "not provided..."}
       await new Promise((resolve) => setTimeout(resolve, shouldWaitMs));
     }
     await client
-      ?.sendRequest("textDocument/definition", {
+      ?.sendRequest(requestType, {
         textDocument: {
           uri: addFilePrefixToFilePath(filePath),
         },
@@ -720,7 +729,7 @@ ${description.ask ? description.ask : "not provided..."}
       console.log("item not array", item);
       return ["", 0, 0, item];
     }
-    const firstItem = item[0];
+    const firstItem = (requestType.includes("implementation") && item.length > 1) ? item[1] : item[0];
     const file = firstItem.uri;
     await client?.sendNotification("textDocument/didClose", {
       textDocument: {
@@ -750,11 +759,24 @@ ${description.ask ? description.ask : "not provided..."}
     let newCharacter2 = newCharacter1;
     let item2 = item1;
 
-    const functionContent = await getFunctionContentFromLineAndCharacter(
+    let functionContent = await getFunctionContentFromLineAndCharacter(
       removeFilePrefixFromFilePath(newFilePath2),
       newLine2,
       newCharacter2
     );
+    const shouldQueryImplementation = (!functionContent.includes("{") && !functionContent.includes("}")) || functionContent.indexOf("}") - functionContent.indexOf("}") < 3
+    if (shouldQueryImplementation && functionContent.split("\n").length < 6) {
+      const [newFilePath3, newLine3, newCharacter3, item3] = await this.doQueryGopls(removeFilePrefixFromFilePath(newFilePath2), newLine2, newCharacter2, 5000, "textDocument/implementation")
+      newFilePath2 = newFilePath3
+      newLine2 = newLine3
+      newCharacter2 = newCharacter3
+      item2 = item3
+      functionContent = await getFunctionContentFromLineAndCharacter(
+        removeFilePrefixFromFilePath(newFilePath3),
+        newLine3,
+        newCharacter3
+      )
+    }
     return [newFilePath2, newLine2, newCharacter2, functionContent, item2];
   }
 
@@ -766,12 +788,12 @@ ${description.ask ? description.ask : "not provided..."}
     this.rootPath = "";
     this.rootLine = -1;
     this.rootCharacter = -1;
-    this.saySocket = () => {};
+    this.saySocket = () => { };
     this.askSocket = async (content: string) => {
       return {} as AskResponse;
     };
     this.messages = [];
-    this.sendState = () => {};
+    this.sendState = () => { };
     this.historyHanlder = null;
     this.apiHandler = buildLLMHanlder("openai", "gpt-4.1", "no key");
   }

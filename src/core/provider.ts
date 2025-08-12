@@ -74,6 +74,10 @@ export class GoLLMReaderProvider implements vscode.WebviewViewProvider {
     }
   }
 
+  async doGc() {
+    linuxReaderAssitant?.doGC();
+  }
+
   async say(content: string): Promise<void> {
     const sayContentJson = JSON.stringify({
       type: "say",

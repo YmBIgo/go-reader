@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import { GoLLMReaderProvider } from './core/provider';
 
 let outputChannel: vscode.OutputChannel;
+let tabProvider: GoLLMReaderProvider;
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -16,7 +17,7 @@ export function activate(context: vscode.ExtensionContext) {
 	outputChannel = vscode.window.createOutputChannel("go-reader");
 	context.subscriptions.push(outputChannel);
 
-	const tabProvider = new GoLLMReaderProvider(context);
+	tabProvider = new GoLLMReaderProvider(context);
 
 	const openGoReaderInNewTab = () => {
 		const lastCol = Math.max(...vscode.window.visibleTextEditors.map((editor) => editor.viewColumn || 0));
@@ -49,4 +50,6 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() {
+	tabProvider.doGc();
+}
