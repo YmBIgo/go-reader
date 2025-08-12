@@ -61,6 +61,10 @@ The LLM will suggest important functions within the current function. You then s
 
 ## Release Notes
 
+#### 1.0.3
+
+Fix implementation bug / gc
+
 #### 1.0.2
 
 Add GPT5 / fix get function content bug / Add Reasoning & thinking for bug hunting
