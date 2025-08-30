@@ -493,7 +493,7 @@ ${functionContent}
     this.saySocket(
       `Gopls is searching "${responseJSON[resultNumber].name}"`
     );
-    const [searchLine, searchCharacter] =
+    let [searchLine, searchCharacter] =
       await getFileLineAndCharacterFromFunctionName(
         currentFilePath,
         responseJSON[resultNumber].code_line,
@@ -764,7 +764,7 @@ ${description.ask ? description.ask : "not provided..."}
       newLine2,
       newCharacter2
     );
-    const shouldQueryImplementation = (!functionContent.includes("{") && !functionContent.includes("}")) || functionContent.indexOf("}") - functionContent.indexOf("}") < 3
+    const shouldQueryImplementation = (!functionContent.includes("{") && !functionContent.includes("}")) || functionContent.indexOf("}") - functionContent.indexOf("{") < 3
     if (shouldQueryImplementation && functionContent.split("\n").length < 6) {
       const [newFilePath3, newLine3, newCharacter3, item3] = await this.doQueryGopls(removeFilePrefixFromFilePath(newFilePath2), newLine2, newCharacter2, 5000, "textDocument/implementation")
       newFilePath2 = newFilePath3

@@ -116,7 +116,7 @@ export async function getFileLineAndCharacterFromFunctionName(
     : memberAccessFunction[memberAccessFunction.length - 1];
   const wholeFunctionName = memberAccessFunctionName;
   const simplfiedFunctionRegexp = !memberAccessFunctionName.includes("(") && memberAccessFunction.length === 1
-    ? new RegExp(`${escapeRegExp(wholeFunctionName + "(")}`)
+    ? new RegExp(`${escapeRegExp(wholeFunctionName)}[\(,\s]`)
     : isFirst || memberAccessFunction.length > 1
     ? new RegExp(`${escapeRegExp(wholeFunctionName)}[^a-zA-Z0-9]*`)
     : new RegExp(`\\s*${escapeRegExp(wholeFunctionName)}[^a-zA-Z0-9]*`);
