@@ -224,7 +224,7 @@ export class GoReader {
     const question = "Input hash value of past history which you want to search from.";
     const result = await this.askSocket(question);
     if (is7wordString(result.ask)) {
-      await this.runHistoryPoint(result.ask);
+      await this.runIntercativeHistoryPoint(result.ask);
       return;
     }
     this.sendErrorSocket("Can not find hash value. Please try again.");
@@ -489,7 +489,6 @@ ${functionContent}
       );
       return;
     }
-    this.historyHanlder?.addHistory(newHistoryChoices);
     this.saySocket(
       `Gopls is searching "${responseJSON[resultNumber].name}"`
     );
@@ -513,6 +512,15 @@ ${functionContent}
       this.saveChoiceTree();
       return;
     }
+    newHistoryChoices = newHistoryChoices.map((hc, index) => {
+      if (String(index) === result.ask) {
+        const newHc = hc;
+        newHc.originalFilePath = removeFilePrefixFromFilePath(newFile);
+        return newHc;
+      } 
+      return hc
+    })
+    this.historyHanlder?.addHistory(newHistoryChoices);
     this.jumpToCode(removeFilePrefixFromFilePath(newFile), newFunctionContent);
     this.historyHanlder?.choose(resultNumber, newFunctionContent);
     this.saySocket(
@@ -536,6 +544,7 @@ ${functionContent}
       });
       let functionStartLine = functionLines[0];
       let functionEndLine = functionLines.at(-1);
+      console.log("jump to", functionStartLine, functionEndLine)
       const functionStartLineIndex =
         openDocText.findIndex((odt) => odt === functionStartLine) ?? 0;
       const positionStart = new vscode.Position(functionStartLineIndex, 0);
@@ -553,6 +562,67 @@ ${functionContent}
     } catch (e) {
       console.warn(e);
     }
+  }
+
+  private async runIntercativeHistoryPoint(historyHash: string) {
+    const searchResult = this.historyHanlder?.searchTreeByIdPublic(historyHash);
+    if (!searchResult) {
+      this.sendErrorSocket(
+        `Can not find hash value of selected search history. ${historyHash}`
+      );
+      this.saveChoiceTree();
+      return;
+    }
+    for (let i = 0; i < searchResult.pos.length; i++) {
+      const pos = searchResult.pos.slice(0, i + 1);
+      const currentRunConfig = this.historyHanlder?.getContentFromPos(pos);
+      if (!currentRunConfig) {
+        this.saySocket(`Can not find content positioned at ${pos.length} ${pos[pos.length - 1].depth}:${pos[pos.length - 1].width}`);
+        continue;
+      }
+      const { functionCodeContent, functionCodeLine, functionName, originalFilePath, id } = currentRunConfig;
+      let functionResult = functionCodeContent;
+      if (!functionCodeContent) {
+        const [line, character] = await getFileLineAndCharacterFromFunctionName(originalFilePath, functionCodeLine, functionName);
+        if (line === -1 && character === -1) {
+          this.sendErrorSocket(
+            `Can not find function of selected search history. ${historyHash}`
+          );
+          this.saveChoiceTree();
+          return;
+        }
+        const [newFile, , , newFileContent] = await this.queryGopls(originalFilePath, line, character);
+        if (!newFile) {
+          console.error("Gopls fails to search file");
+          this.sendErrorSocket("Gopls fails to search file");
+          this.saveChoiceTree();
+          return;
+        }
+        functionResult = newFileContent;
+      }
+      const foundCallback = (st: ChoiceTree) => {
+        st.content.functionCodeContent = functionResult ?? functionCodeLine;
+      }
+      this.historyHanlder?.moveById(id.slice(0, 7), foundCallback);
+      if (searchResult.pos.length === i + 1) {
+        break;
+      }
+      if (functionResult) {
+        this.saySocket("Jump to the selected code ...")
+        this.jumpToCode(originalFilePath, functionResult);
+      }
+      let resultString = ""
+      for(;;) {
+        const result = await this.askSocket("Please Enter 1 when you want to jump to the next function.");
+        if (parseInt(result.ask) === 1) {
+          resultString = "1"
+          break;
+        }
+      }
+      const newMessages = this.addMessages(`User Enter ${resultString}`, "user");
+      this.sendState(newMessages);
+    }
+    this.runHistoryPoint(historyHash);
   }
 
   private async runHistoryPoint(historyHash: string) {
@@ -588,6 +658,7 @@ ${functionContent}
       st.content.functionCodeContent = functionResult ?? functionCodeLine;
     }
     this.historyHanlder?.moveById(historyHash, foundCallback);
+    if (functionResult) this.jumpToCode(originalFilePath, functionResult)
     this.runTask(originalFilePath, functionResult ?? functionCodeLine);
   }
 
