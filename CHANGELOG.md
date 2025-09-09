@@ -4,6 +4,10 @@ All notable changes to the "go-reader" extension will be documented in this file
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+#### 1.0.6
+
+Add comment function
+
 #### 1.0.5
 
 Interactively jump when use history run
