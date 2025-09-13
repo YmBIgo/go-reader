@@ -8,7 +8,7 @@ import pWaitFor from "p-wait-for";
 import { LLMName } from "./llm";
 
 let view: vscode.WebviewView | vscode.WebviewPanel;
-let linuxReaderAssitant: GoReader | null;
+let goReaderAssitant: GoReader | null;
 
 export class GoLLMReaderProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "go-reader.SlidebarProvider";
@@ -16,6 +16,7 @@ export class GoLLMReaderProvider implements vscode.WebviewViewProvider {
   private allowedMessageType = [
     "Init",
     "InitHistory",
+    "InitFolder",
     "Reset",
     "Ask",
     "Gopls",
@@ -35,8 +36,8 @@ export class GoLLMReaderProvider implements vscode.WebviewViewProvider {
   constructor(private readonly context: vscode.ExtensionContext) {}
 
   async init() {
-    await linuxReaderAssitant?.doGC();
-    linuxReaderAssitant = new GoReader(
+    await goReaderAssitant?.doGC();
+    goReaderAssitant = new GoReader(
       this.ask,
       this.say,
       this.sendError,
@@ -75,7 +76,7 @@ export class GoLLMReaderProvider implements vscode.WebviewViewProvider {
   }
 
   async doGc() {
-    linuxReaderAssitant?.doGC();
+    goReaderAssitant?.doGC();
   }
 
   async say(content: string): Promise<void> {
@@ -87,7 +88,7 @@ export class GoLLMReaderProvider implements vscode.WebviewViewProvider {
   }
 
   async ask(content: string): Promise<AskResponse> {
-    linuxReaderAssitant?.clearWebViewAskResponse();
+    goReaderAssitant?.clearWebViewAskResponse();
     const askContentJson = JSON.stringify({
       type: "ask",
       ask: content,
@@ -95,12 +96,12 @@ export class GoLLMReaderProvider implements vscode.WebviewViewProvider {
     view?.webview.postMessage(askContentJson);
     await pWaitFor(
       () => {
-        return !!linuxReaderAssitant?.getWebViewAskResponse();
+        return !!goReaderAssitant?.getWebViewAskResponse();
       },
       { interval: 500 }
     );
     const response: AskResponse = {
-      ask: linuxReaderAssitant?.getWebViewAskResponse() ?? "unknown error",
+      ask: goReaderAssitant?.getWebViewAskResponse() ?? "unknown error",
     };
     console.log("response : ", response);
     return response;
@@ -160,7 +161,7 @@ export class GoLLMReaderProvider implements vscode.WebviewViewProvider {
           const rootFunctionName = message.rootFunctionName ?? "";
           const purpose = message.purpose ?? "";
           console.log("Task Start", rootPath, purpose);
-          linuxReaderAssitant?.runFirstTask(
+          goReaderAssitant?.runFirstTask(
             rootPath,
             rootFunctionName,
             purpose
@@ -179,7 +180,7 @@ export class GoLLMReaderProvider implements vscode.WebviewViewProvider {
             };
             // 残るのは choiceTree
             console.log("History Task Start", rootPath, purpose);
-            linuxReaderAssitant?.runFirstTaskWithHistory(
+            goReaderAssitant?.runFirstTaskWithHistory(
               rootPath,
               rootFunctionName,
               purpose,
@@ -189,10 +190,18 @@ export class GoLLMReaderProvider implements vscode.WebviewViewProvider {
             console.error(e);
           }
           break;
+        case "InitFolder":
+          let folder = message.folder ?? "";
+          const folderPurpose = message.purpose ?? "";
+          if (folder[folder.length-1] === "/") folder = folder.slice(0, folder.length-1)
+          //
+          console.log("Folder Task Start", folder, folderPurpose);
+          goReaderAssitant?.runFirstTaskWithFolder(folder, folderPurpose);
+          break;
         case "Reset":
-          linuxReaderAssitant?.doGC();
-          linuxReaderAssitant = null;
-          linuxReaderAssitant = new GoReader(
+          goReaderAssitant?.doGC();
+          goReaderAssitant = null;
+          goReaderAssitant = new GoReader(
             this.ask,
             this.say,
             this.sendError,
@@ -220,7 +229,7 @@ export class GoLLMReaderProvider implements vscode.WebviewViewProvider {
         case "Ask":
           const askResponse = message.askResponse;
           console.log("receive message", askResponse);
-          linuxReaderAssitant?.handleWebViewAskResponse(askResponse);
+          goReaderAssitant?.handleWebViewAskResponse(askResponse);
           break;
         case "Gopls":
           const goplsPath = message.text;
